@@ -1,0 +1,50 @@
+name: Build Android APK
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build Unity Android
+    runs-on: ubuntu-latest
+    steps:
+      - name: Free up disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/share/boost /usr/local/.ghcup
+          df -h
+
+      - name: Checkout private game repository
+        uses: actions/checkout@v4
+        with:
+          repository: USERNAME_KAMU/NAMA_REPO_PRIVATE
+          token: ${{ secrets.PAT_PRIVATE }}
+          path: project
+
+      - name: Cache Unity Library
+        uses: actions/cache@v4
+        with:
+          path: project/Library
+          key: Library-Android-${{ hashFiles('project/Packages/manifest.json', 'project/Packages/packages-lock.json') }}
+          restore-keys: |
+            Library-Android-
+
+      - name: Build Android APK
+        id: build
+        uses: game-ci/unity-builder@v4
+        env:
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        with:
+          projectPath: project
+          unityVersion: 6000.4.10f1
+          targetPlatform: Android
+          buildName: PyramidAndroid
+          buildsPath: build
+          androidExportType: androidPackage
+
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Pyramid-Android-APK
+          path: build/Android/*.apk
+          retention-days: 1
