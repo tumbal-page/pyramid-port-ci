@@ -16,7 +16,7 @@ jobs:
       - name: Checkout private game repository
         uses: actions/checkout@v4
         with:
-          repository: USERNAME_KAMU/NAMA_REPO_PRIVATE
+          repository: tumbal-page/pyramid-port-source
           token: ${{ secrets.PAT_PRIVATE }}
           path: project
 
