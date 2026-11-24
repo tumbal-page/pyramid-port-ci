@@ -1,26 +1,40 @@
 name: Build Android APK
+
 on:
   workflow_dispatch:
+
+permissions:
+  contents: read
+
 jobs:
   build:
+    name: Build Unity Android (smoke)
     runs-on: ubuntu-latest
+    timeout-minutes: 120
     steps:
-      - uses: jlumbroso/free-disk-space@v1.2.0
+      - name: Free up disk space
+        uses: jlumbroso/free-disk-space@v1.2.0
         with:
           android: true
           dotnet: true
           haskell: true
           tool-cache: true
           large-packages: false
-          swap-storage: true
-      - run: df -h /
-      - uses: actions/checkout@v4
+          swap-storage: false
+
+      - name: Disk check
+        run: df -h /
+
+      - name: Checkout private source (branch smoke)
+        uses: actions/checkout@v4
         with:
           repository: tumbal-page/pyramid-port-source
           ref: smoke
           token: ${{ secrets.PAT_PRIVATE }}
           path: project
-      - uses: game-ci/unity-builder@v4
+
+      - name: Build Android APK
+        uses: game-ci/unity-builder@v5
         env:
           UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
@@ -30,7 +44,9 @@ jobs:
           targetPlatform: Android
           buildMethod: SmokeBuild.Build
           buildsPath: build
-      - uses: actions/upload-artifact@v4
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
         with:
           name: Smoke-APK
           path: build/Android/*.apk
