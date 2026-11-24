@@ -1,36 +1,26 @@
 name: Build Android APK
-
 on:
   workflow_dispatch:
-
 jobs:
   build:
-    name: Build Unity Android
     runs-on: ubuntu-latest
     steps:
-      - name: Free up disk space
-        run: |
-          sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/share/boost /usr/local/.ghcup
-          df -h
-
-      - name: Checkout private game repository
-        uses: actions/checkout@v4
+      - uses: jlumbroso/free-disk-space@v1.2.0
+        with:
+          android: true
+          dotnet: true
+          haskell: true
+          tool-cache: true
+          large-packages: false
+          swap-storage: true
+      - run: df -h /
+      - uses: actions/checkout@v4
         with:
           repository: tumbal-page/pyramid-port-source
+          ref: smoke
           token: ${{ secrets.PAT_PRIVATE }}
           path: project
-
-      - name: Cache Unity Library
-        uses: actions/cache@v4
-        with:
-          path: project/Library
-          key: Library-Android-${{ hashFiles('project/Packages/manifest.json', 'project/Packages/packages-lock.json') }}
-          restore-keys: |
-            Library-Android-
-
-      - name: Build Android APK
-        id: build
-        uses: game-ci/unity-builder@v4
+      - uses: game-ci/unity-builder@v4
         env:
           UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
@@ -38,13 +28,10 @@ jobs:
           projectPath: project
           unityVersion: 6000.4.10f1
           targetPlatform: Android
-          buildName: PyramidAndroid
+          buildMethod: SmokeBuild.Build
           buildsPath: build
-          androidExportType: androidPackage
-
-      - name: Upload APK Artifact
-        uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v4
         with:
-          name: Pyramid-Android-APK
+          name: Smoke-APK
           path: build/Android/*.apk
           retention-days: 1
